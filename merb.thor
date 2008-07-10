@@ -37,12 +37,6 @@ class Merb < Thor
     install.core
     install.more
   end
-
-  desc 'refresh', 'Remove and reinstall Merb thor recipes'
-  def refresh
-    system("thor uninstall merb.thor")
-    system("thor install http://github.com/jackdempsey/merb-thor/tree/master/merb.thor?raw=true")
-  end
   
   class Gems < Thor
     desc 'wipe', 'Uninstall all RubyGems related to Merb'
