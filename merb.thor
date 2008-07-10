@@ -1,5 +1,3 @@
-# module: random
-
 class Merb < Thor
 
   MERB_REPOS = ["merb-core", "merb-more", "merb-plugins"]
@@ -38,6 +36,12 @@ class Merb < Thor
     install = Install.new
     install.core
     install.more
+  end
+
+  desc 'refresh', 'Remove and reinstall Merb thor recipes'
+  def refresh
+    system("thor uninstall merb.thor")
+    system("thor install http://github.com/jackdempsey/merb-thor/tree/master/merb.thor?raw=true")
   end
   
   class Gems < Thor
@@ -82,12 +86,4 @@ class Merb < Thor
       FileUtils.cd("..")
     end
   end
-   
-  desc 'refresh', 'Remove and reinstall Merb sake recipes'
-  def refresh
-    system("thor uninstall merb.thor")
-    system("thor install http://github.com/jackdempsey/merb-thor/tree/master/merb.thor")
-  end
-    
-    
 end
