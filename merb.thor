@@ -23,11 +23,11 @@ class Merb < Thor
       end
     end
     MERB_REPOS.each do |r|
-      FileUtils.cd(r)
-      system("git fetch")
-      system("git checkout master")
-      system("git rebase origin/master")
-      FileUtils.cd("..")
+      FileUtils.cd(r) do 
+        system("git fetch")
+        system("git checkout master")
+        system("git rebase origin/master")
+      end
     end
   end
   
@@ -55,29 +55,22 @@ class Merb < Thor
       merb.update
       merb.install
     end
-
   end
 
   class Install < Thor
     desc 'core', 'Install merb-core'
     def core
-      FileUtils.cd("merb-core")
-      system("rake install")
-      FileUtils.cd("..")
+      FileUtils.cd("merb-core") { system("rake install") }
     end
     
     desc 'more', 'Install merb-more'
     def more
-      FileUtils.cd("merb-more")
-      system("rake install")
-      FileUtils.cd("..")
+      FileUtils.cd("merb-more") { system("rake install") }
     end
     
     desc 'plugins', 'Install merb-plugins'
     def plugins
-      FileUtils.cd("merb-plugins")
-      system("rake install")
-      FileUtils.cd("..")
+      FileUtils.cd("merb-plugins") { system("rake install") }
     end
   end
 end
