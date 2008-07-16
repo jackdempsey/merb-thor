@@ -23,10 +23,12 @@ class Merb < Thor
       end
     end
     MERB_REPOS.each do |r|
-      FileUtils.cd(r) do 
-        system("git fetch")
-        system("git checkout master")
-        system("git rebase origin/master")
+      FileUtils.cd(r) do
+        system %{
+          git fetch
+          git checkout master
+          git rebase origin/master
+        }
       end
     end
   end
