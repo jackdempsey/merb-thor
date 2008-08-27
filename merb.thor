@@ -1,3 +1,5 @@
+#!/usr/local/bin/ruby
+
 class Merb < Thor
 
   MERB_REPOS = ["merb-core", "merb-more", "merb-plugins"] unless defined? MERB_REPOS
@@ -5,53 +7,63 @@ class Merb < Thor
 
   desc "clone", "clone the 3 main merb repositories"
   def clone
-    if File.exists?("merb")
-      puts("./merb already exists!")
-      exit
-    end
     require "fileutils"
-    FileUtils.mkdir("merb")
-    FileUtils.cd("merb")
-    MERB_REPOS.each {|r| system("git clone git://github.com/wycats/#{r}.git") }
-    unless File.exists?("extlib")
-      system("git clone #{EXTLIB_REPO}")
-    end
-  end
 
-  desc 'update', 'Update your local Merb repositories.  Run from inside the top-level merb directory.'
-  def update
+    unless File.exists?('merb')
+      puts "Creating merb dir..."
+      FileUtils.mkdir("merb")
+    end
+
+    FileUtils.cd("merb")
+
     MERB_REPOS.each do |r|
-      unless File.exists?(r)
-        puts("#{r} missing ... did you use merb:clone to set this up?")
-        exit
+      if File.exists?(r)
+        puts "\n#{r} repos exists! Updating instead of cloning..."
+        FileUtils.cd(r) do
+          system %{
+            git fetch
+            git checkout master
+            git rebase origin/master
+          }
+        end
+      else
+        puts "\nCloning #{r} repos..."
+        system("git clone git://github.com/wycats/#{r}.git")
       end
     end
-    MERB_REPOS.each do |r|
-      FileUtils.cd(r) do
+
+    if File.exists?("extlib")
+      puts "\nextlib repo exists! Updating instead of cloning..."
+      FileUtils.cd('extlib') do
         system %{
           git fetch
           git checkout master
           git rebase origin/master
         }
       end
+    else
+      puts "\nCloning extlib repos..."
+      system("git clone #{EXTLIB_REPO}")
     end
-    unless File.exists?("extlib")
-      puts("extlib missing ... did you use merb:clone to set this up?")
-      exit
-    end
-    FileUtils.cd("extlib")
-    system %{
-      git fetch
-      git checkout master
-      git rebase origin/master
-    }
   end
 
-  desc 'install', 'Install merb-core and merb-more'
+  desc 'update', 'Update your local Merb repositories.  Run from outside the top-level merb directory.'
+  def update
+    check_for_dir('./merb')
+    Merb.new.clone
+  end
+
+  desc 'install', 'Install extlib, merb-core, and merb-more'
   def install
     install = Install.new
+
+    check_for_dir('./extlib')
     install.extlib
+
+    check_for_dir('./merb-core')
     install.core
+
+    check_for_dir('./merb-more')
     install.more
   end
 
@@ -59,12 +71,12 @@ class Merb < Thor
     desc 'wipe', 'Uninstall all RubyGems related to Merb'
     def wipe
       windows = PLATFORM =~ /win32|cygwin/ rescue nil
-      sudo = windows ? ("") : ("sudo")
+      sudo = windows ? "" : "sudo"
       `gem list merb`.split("\n").each do |line|
         next unless line =~ /^(merb[^ ]+)/
-        system("#{sudo} gem uninstall -a -i -x #{$1}")
+        system("#{sudo} gem uninstall #{$1} -a -i -x; true")
       end
-      system("#{sudo} gem uninstall -a -i -x extlib")
+      system("#{sudo} gem uninstall extlib -a -i -x")
     end
 
     desc 'refresh', 'Pull fresh copies of Merb and refresh all the gems'
@@ -78,22 +90,38 @@ class Merb < Thor
   class Install < Thor
     desc 'core', 'Install merb-core'
     def core
-      FileUtils.cd("merb-core") { system("rake install") }
+      install_gem "merb-core"
     end
 
     desc 'more', 'Install merb-more'
     def more
-      FileUtils.cd("merb-more") { system("rake install") }
+      install_gem "merb-more"
     end
 
     desc 'plugins', 'Install merb-plugins'
     def plugins
-      FileUtils.cd("merb-plugins") { system("rake install") }
+      install_gem "merb-plugins"
     end
 
     desc 'extlib', 'Install extlib'
     def extlib
-      FileUtils.cd("extlib") { system("rake install") }
+      install_gem "extlib"
+    end
+
+    private
+
+    def install_gem(gem)
+      FileUtils.cd(gem) { system("rake install") }
     end
   end
+
+  private
+
+  def check_for_dir(dir)
+    unless File.exists?(dir)
+      puts "Error : Can't see '#{dir}' dir. Make sure you're in the correct directory and try again."
+      exit
+    end
+  end
+
 end
