@@ -1,0 +1,8 @@
+Merb.thor now lives in merb-gen, so you can easily regenerate it through 
+'merb-gen app .' - here's a shortcut: http://merbivore.com/merb.thor
+
+To stay on the edge of merb.thor development you can fetch it like this:
+
+curl -L http://merbivore.com/merb.thor > merb.thor
+
+Visit http://merbunity.com/tutorials/18 for more information.
